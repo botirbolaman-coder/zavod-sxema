@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Цех схемаси</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#ffffff;--ink:#1f1f1d;--mut:#6b6a64;--line:#d3d1c7;--btn:#0F6E56;--btnt:#fff}
+:root.dark{--bg:#18181b;--ink:#ecebe6;--mut:#a6a59e;--line:#3a3935;--btn:#5DCAA5;--btnt:#04342C}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:12px 12px 20px}
+h1{font-size:18px;margin:0 0 2px;font-weight:600}
+.sub{color:var(--mut);font-size:13px;margin-bottom:8px}
+.hint{font-size:13px;color:var(--mut);margin:6px 0 10px}
+svg{width:100%;height:auto;display:block;user-select:none}
+.m{cursor:pointer}
+.m:active rect{opacity:.65}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mut);margin:10px 0 14px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1px solid}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px;background:var(--btn);color:var(--btnt);cursor:pointer}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.err{padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Цех схемаси</h1>
+<div class="sub" id="sub">Ҳолат юкланмоқда…</div>
+<div class="hint">Ускунанинг устига босинг — шу ускуна бўйича маълумот киритиш очилади.</div>
+<div id="map"></div>
+<div class="legend" id="legend"></div>
+<div class="btns">
+<button class="sec" id="wh">📦 Омборга кирим</button>
+<button class="sec" id="rep">📊 Ҳисобот</button>
+</div>
+</div>
+<script>
+const MACHINES = [{"n":1,"name":"Kim Press 26A","type":"press","sheet":1,"x":47,"y":57,"w":164,"h":68},{"n":2,"name":"Kim Press 26B","type":"press","sheet":2,"x":372,"y":17,"w":248,"h":70},{"n":3,"name":"Kim Press 26C","type":"press","sheet":2,"x":417,"y":150,"w":198,"h":110},{"n":4,"name":"Ammy Press 21","type":"press","sheet":1,"x":45,"y":160,"w":165,"h":65},{"n":5,"name":"Ammy Press 23","type":"press","sheet":1,"x":102,"y":367,"w":223,"h":75},{"n":6,"name":"Ammy Press 24","type":"press","sheet":1,"x":527,"y":372,"w":110,"h":63},{"n":7,"name":"Kim Cup 25","type":"cup","sheet":2,"x":418,"y":395,"w":153,"h":65},{"n":8,"name":"Kim Cup 26A","type":"cup","sheet":1,"x":460,"y":95,"w":112,"h":55},{"n":9,"name":"Kim Cup 26B","type":"cup","sheet":1,"x":460,"y":205,"w":117,"h":58},{"n":10,"name":"Kim Cup 26C","type":"cup","sheet":1,"x":590,"y":92,"w":58,"h":168},{"n":11,"name":"Kim Cup 26D","type":"cup","sheet":2,"x":338,"y":215,"w":64,"h":205},{"n":12,"name":"Ammy Cup 21","type":"cup","sheet":1,"x":31,"y":262,"w":169,"h":63},{"n":13,"name":"Ammy Cup 23","type":"cup","sheet":1,"x":265,"y":42,"w":72,"h":173},{"n":14,"name":"Ammy Cup 24A","type":"cup","sheet":1,"x":402,"y":372,"w":105,"h":58},{"n":15,"name":"Ammy Cup 24B","type":"cup","sheet":1,"x":370,"y":47,"w":72,"h":163},{"n":16,"name":"Lin Bottle 25","type":"bottle","sheet":2,"x":581,"y":307,"w":64,"h":153},{"n":17,"name":"Negri Bossi 220","type":"other","sheet":2,"x":165,"y":215,"w":75,"h":228},{"n":18,"name":"Negri Bossi 450","type":"other","sheet":2,"x":252,"y":222,"w":72,"h":210},{"n":19,"name":"Walmo 350","type":"other","sheet":2,"x":77,"y":210,"w":73,"h":243}];
+const PRODUCTS = ["F15 Экспорт","F8 Экспорт","Ру-1","F8","F8 40 М","F15","Текис копкок","Сметана 365 мини","К-300 Экспорт","К-500 Экспорт","К-700 Экспорт","К-700","К-500","К-300","К-1000 Экспорт","Десерт 250 Гумбаз К","Каймок 250","Курт 150","Десерт 150 Гумбаз К","Каймок 500","Курт 150 ок","Каймок 250 ок","Каймок 0,25","Каймок 400","Каймок 500 ок","Каймок 0,4","Курт 150 теги","Десерт 250 теги","Курт 150 ок теги","Каймок 365 мини","Каймок 0,4 теги","Десерт 150 теги","Каймок 365 макси","Гумбаз Копкок Тешикли","Гумбаз Копкок Тешиксиз","Коса реб","Челак 1л","Коса 600","Челак ок 1л","Тогорача 3 л","Тогорача 2 л","Соус 80гр","катик челак 365","Тогорача 3 л кора","Коса 600 кора","Чаша Bowl 150 ок","Челак Кулупнай","Чаша Bowl 350 ок","катик челак музкаймок","тогорача теги 2 л","Коса теги","тогорача теги 3 л","Челак Малина","Коса кора","Челак Мазза","Челак Олео","Челак Чикс","Челак Банан","Челак Смородина","Челак Олма","Челак Шафтоли","Челак Какао","Челак Фозилов Банан","Челак Фозилов Кулупнай","Коса ок","Коса крышка","Коса 600 теги","Челак Классика","Челак Сгущенка","Челак Боветти","Челак Ламусса","Тогорача 2 л кора","Челак Шина гел","Челак СССР","Челак Клубника","Челак Фозилов шоколад","Соус 80 гр теги","Челак Катик","Челак Фозилов Киви","Тогорача теги 3 л кора","Коса 600 копкок","Чаша Bowl 150 яшил","Чаша Bowl 150 пушти","Чаша Bowl 350 Яшил","Чаша Bowl 350 пушти","Челак кизил 1л","Челак Яшил 1л","Мева 250","Мева 500","Мева 1000","Ов-425","Ов-300","Ов-600 300м","Ов-600 Экспорт","Ов-600 350м","Ов-600 400м","Ов-425 300 M","П- 700 ок","П- 1000 ок (1400)","П- 500 ок","П- 700 кора","П- 1000","П- 500 кора (1600)","П- 500","П- 1000 кора 1400","П- 1000 кора 1000","П- 700 ШАФАФ","ПЕТ бутылка 0,9 л ок","ПЕТ бутылка 0,9 л","ПЕТ бутылка 0,25 л","ПЕТ бутылка 0,31 л","ПЕТ бутылка 0,29 л ок","ПЕТ бутылка 0,29 л","ПЕТ бутылка 0,9 л 20 грамм","ПЕТ бутылка 0,31 л ок","ПЕТ бутылка 0,25 л ок","Рама","Рама КК - 900 ок","С-1","Стакан 500 Гумбаз К","Стакан 400 Гумбаз К","С-1 Экспорт","Стакан 700 Гумбаз К","Стакан 300","С-2 Тулкин Экспорт","С-1 ок","ICE Coffee 500","ICE Coffee копкок","Стакан 500 теги","ICE Coffee 400","Стакан 400 теги","Стакан 700","ICE Coffee 700","С-1 Идишчи","С-1 ДК","С-2 Тулкин","Стакан 300 Гумбаз К","Стакан 700 Текис К","С-1 кизил","Стакан 400 Текис К","Ребристые тарелки ок","Ребристые тарелки Пушти","Ребристые тарелки Яшил","Тарелки Чарх ок","Тарелки Чарх яшил","Тарелки Чарх пушти","Тухум 10А","Тухум 15А","Бедана 20","Бедана 12","Тухум 6","Тухум 30 (латок+копкок)","Тухум 30 кора (латок+копкок)","УПЗ - 650","УПЗ-250/250","УПЗ-500","УПЗ- копкок","УПЗ-300/150","УПЗ - 350/80","УПЗ Юмалок 350","УПЗ Юмалок 250","УПЗ 109/45","П- 500 кора (2000)","П- 1000 ок (1000)","П- 700 ок 1000 талик"];
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
+const dark = tg ? tg.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+if (dark) document.documentElement.classList.add('dark');
+const qs = new URLSearchParams(location.search);
+const BOT = (qs.get('bot') || '').replace(/^@/, '');
+const START = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || qs.get('tgWebAppStartParam') || qs.get('s') || '';
+
+const PAL = dark ? {
+  press:{f:'#4A1B0C',s:'#F0997B',t:'#FAECE7'}, cup:{f:'#04342C',s:'#5DCAA5',t:'#E1F5EE'}, bottle:{f:'#412402',s:'#EF9F27',t:'#FAEEDA'},
+  other:{f:'#26215C',s:'#AFA9EC',t:'#EEEDFE'}, empty:{f:'#2C2C2A',s:'#888780',t:'#D3D1C7'}, stop:{f:'#501313',s:'#F09595',t:'#FCEBEB'}
+} : {
+  press:{f:'#FAECE7',s:'#993C1D',t:'#4A1B0C'}, cup:{f:'#E1F5EE',s:'#0F6E56',t:'#04342C'}, bottle:{f:'#FAEEDA',s:'#854F0B',t:'#412402'},
+  other:{f:'#EEEDFE',s:'#534AB7',t:'#26215C'}, empty:{f:'#F1EFE8',s:'#888780',t:'#5F5E5A'}, stop:{f:'#FCEBEB',s:'#A32D2D',t:'#501313'}
+};
+
+// Ҳолатни ўқиш
+const state = {};
+let sub = 'Ҳолат маълум эмас — каналдаги охирги «Схемани очиш» тугмаси орқали очинг.';
+if (/^[dn]\d{10}/.test(START)) {
+  const k = START[0], d = START.slice(1, 7), hm = START.slice(7, 11);
+  sub = d.slice(4, 6) + '.' + d.slice(2, 4) + '.20' + d.slice(0, 2) + ' · ' + (k === 'd' ? 'кундузги навбат (08:00–20:00)' : 'тунги навбат (20:00–08:00)') + ' · ' + hm.slice(0, 2) + ':' + hm.slice(2) + ' ҳолати';
+  const body = START.slice(11);
+  MACHINES.forEach((m, i) => {
+    const c = body.slice(i * 3, i * 3 + 3);
+    if (c.length < 3) return;
+    const id = parseInt(c.slice(1), 36);
+    state[m.n] = { status: c[0], product: c[0] === 'r' || (c[0] === 's' && c.slice(1) !== '00') ? PRODUCTS[id] : c[0] === 'c' ? 'бошқа идиш' : '' };
+  });
+}
+document.getElementById('sub').textContent = sub;
+
+function wrap(text, max) {
+  const words = String(text || '').split(/\s+/).filter(Boolean), lines = [];
+  let cur = '';
+  for (let w of words) {
+    while (w.length > max) { if (cur) { lines.push(cur); cur = ''; } lines.push(w.slice(0, max)); w = w.slice(max); }
+    if (!cur) cur = w; else if ((cur + ' ' + w).length <= max) cur += ' ' + w; else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+const T1 = 30, T2 = 540, W = 680, H = 1040;
+let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Цех схемаси">';
+[[T1, '1-қисм'], [T2, '2-қисм']].forEach(([top, label]) => {
+  svg += '<rect x="10" y="' + top + '" width="660" height="490" rx="12" fill="none" stroke="' + (dark ? '#3a3935' : '#B4B2A9') + '" stroke-dasharray="5 4"/>';
+  svg += '<text x="20" y="' + (top + 16) + '" font-size="11" fill="' + (dark ? '#888780' : '#888780') + '">' + label + '</text>';
+});
+for (const m of MACHINES) {
+  const st = state[m.n] || {};
+  const kind = st.status === 's' ? 'stop' : st.status === 'r' || st.status === 'c' ? m.type : 'empty';
+  const c = PAL[kind];
+  const top = (m.sheet === 1 ? T1 : T2) + m.y;
+  const cpl = (fs) => Math.max(4, Math.floor((m.w - 8) / (fs * 0.55)));
+  let lines = [{ t: '№' + m.n, fs: 22, b: 1 }];
+  const nameL = wrap(m.name, cpl(12)).map((t) => ({ t, fs: 12, mu: 1 }));
+  const prodL = st.status === 's' ? [{ t: 'ТЎХТАГАН', fs: 13, b: 1 }] : st.product ? wrap(st.product, cpl(13)).map((t) => ({ t, fs: 13, b: 1 })) : [{ t: 'бўш', fs: 13, mu: 1 }];
+  const sum = (a) => a.reduce((x, l) => x + l.fs * 1.22, 0);
+  let all = lines.concat(nameL, prodL);
+  if (sum(all) > m.h - 6) all = lines.concat(prodL);
+  while (sum(all) > m.h - 6 && all.length > 2) { all.pop(); const l = all[all.length - 1]; l.t = l.t.slice(0, Math.max(1, l.t.length - 1)) + '…'; }
+  let y = top + (m.h - sum(all)) / 2;
+  svg += '<g class="m" data-n="' + m.n + '"><rect x="' + m.x + '" y="' + top + '" width="' + m.w + '" height="' + m.h + '" rx="6" fill="' + c.f + '" stroke="' + c.s + '" stroke-width="' + (kind === 'stop' ? 2.5 : 1.2) + '"/>';
+  for (const l of all) { y += l.fs * 1.22; svg += '<text x="' + (m.x + m.w / 2) + '" y="' + (y - l.fs * 0.28).toFixed(1) + '" font-size="' + l.fs + '" text-anchor="middle" font-weight="' + (l.b ? 700 : 400) + '" fill="' + (l.mu ? c.s : c.t) + '" pointer-events="none">' + esc(l.t) + '</text>'; }
+  svg += '</g>';
+}
+svg += '</svg>';
+document.getElementById('map').innerHTML = svg;
+
+const LEG = [['press', 'Пресс'], ['cup', 'Cup'], ['bottle', 'Бутилка'], ['other', 'Бошқа'], ['empty', 'Бўш'], ['stop', 'Тўхтаган']];
+document.getElementById('legend').innerHTML = LEG.map(([k, t]) => '<span><i style="background:' + PAL[k].f + ';border-color:' + PAL[k].s + '"></i>' + t + '</span>').join('');
+
+function go(arg) {
+  if (!BOT) { alert('Созлашда хато: саҳифа манзилига ?bot=БОТ_НОМИ қўшилмаган.'); return; }
+  const url = 'https://t.me/' + BOT + '?start=' + arg;
+  try { tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+  if (tg && tg.openTelegramLink) tg.openTelegramLink(url); else location.href = url;
+}
+document.getElementById('map').addEventListener('click', (e) => {
+  const g = e.target.closest('.m');
+  if (g) go('m' + g.dataset.n);
+});
+document.getElementById('wh').onclick = () => go('wh');
+document.getElementById('rep').onclick = () => go('rep');
+</script>
+</body>
+</html>
