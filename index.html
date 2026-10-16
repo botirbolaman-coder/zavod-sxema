@@ -47,7 +47,9 @@ if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
 const dark = tg ? tg.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
 if (dark) document.documentElement.classList.add('dark');
 const qs = new URLSearchParams(location.search);
-const BOT = (qs.get('bot') || "Atlantzavod_bot").replace(/^@/, '');
+// Саҳифага ёзилган бот номи биринчи ўринда; манзилдаги ?bot= фақат у бўлмаса ишлатилади (ортиқча белгилар тозаланади)
+const cleanBot = (v) => { let s = String(v || '').trim(); const i = s.lastIndexOf('t.me/'); if (i >= 0) s = s.slice(i + 5); s = s.replace(/^@/, '').split('/')[0].split('?')[0].split('#')[0].split(' ')[0]; return s.replace(/[^A-Za-z0-9_]/g, ''); };
+const BOT = cleanBot("Atlantzavod_bot") || cleanBot(qs.get('bot'));
 const START = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || qs.get('tgWebAppStartParam') || qs.get('s') || '';
 
 const PAL = dark ? {
