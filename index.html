@@ -71,7 +71,8 @@ if (/^[dn]\d{10}/.test(START)) {
     const c = body.slice(i * 5, i * 5 + 5);
     if (c.length < 5) return;
     const code = c.slice(1);
-    state[m.n] = { status: c[0], product: c[0] === 'c' ? 'бошқа идиш' : code !== '0000' ? (PRODUCTS[code] || 'идиш') : '' };
+    const name = code !== '0000' ? (PRODUCTS[code] || 'идиш') : '';
+    state[m.n] = { status: c[0] === 'm' ? 'r' : c[0], product: c[0] === 'c' ? 'бошқа идиш' : c[0] === 'm' ? (name || 'идиш') + ' + яна' : name };
   });
 }
 document.getElementById('sub').textContent = sub;
