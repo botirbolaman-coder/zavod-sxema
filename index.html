@@ -12,7 +12,7 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
 .wrap{max-width:720px;margin:0 auto;padding:12px 12px 20px}
 h1{font-size:18px;margin:0 0 2px;font-weight:600}
-.sub{color:var(--mut);font-size:13px;margin-bottom:8px}
+.sub{color:var(--ink);font-size:14px;font-weight:600;margin-bottom:8px}
 .hint{font-size:13px;color:var(--mut);margin:6px 0 10px}
 svg{width:100%;height:auto;display:block;user-select:none}
 .m{cursor:pointer}
@@ -53,11 +53,9 @@ const BOT = cleanBot("Atlantzavod_bot") || cleanBot(qs.get('bot'));
 const START = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || qs.get('tgWebAppStartParam') || qs.get('s') || '';
 
 const PAL = dark ? {
-  press:{f:'#4A1B0C',s:'#F0997B',t:'#FAECE7'}, cup:{f:'#04342C',s:'#5DCAA5',t:'#E1F5EE'}, bottle:{f:'#412402',s:'#EF9F27',t:'#FAEEDA'},
-  other:{f:'#26215C',s:'#AFA9EC',t:'#EEEDFE'}, empty:{f:'#2C2C2A',s:'#888780',t:'#D3D1C7'}, stop:{f:'#501313',s:'#F09595',t:'#FCEBEB'}
+  run:{f:'#04342C',s:'#5DCAA5',t:'#E1F5EE'}, empty:{f:'#2C2C2A',s:'#888780',t:'#D3D1C7'}, stop:{f:'#501313',s:'#F09595',t:'#FCEBEB'}
 } : {
-  press:{f:'#FAECE7',s:'#993C1D',t:'#4A1B0C'}, cup:{f:'#E1F5EE',s:'#0F6E56',t:'#04342C'}, bottle:{f:'#FAEEDA',s:'#854F0B',t:'#412402'},
-  other:{f:'#EEEDFE',s:'#534AB7',t:'#26215C'}, empty:{f:'#F1EFE8',s:'#888780',t:'#5F5E5A'}, stop:{f:'#FCEBEB',s:'#A32D2D',t:'#501313'}
+  run:{f:'#E1F5EE',s:'#0F6E56',t:'#04342C'}, empty:{f:'#F1EFE8',s:'#888780',t:'#5F5E5A'}, stop:{f:'#FCEBEB',s:'#A32D2D',t:'#501313'}
 };
 
 // Ҳолатни ўқиш
@@ -65,7 +63,7 @@ const state = {};
 let sub = 'Ҳолат маълум эмас — каналдаги охирги «Схемани очиш» тугмаси орқали очинг.';
 if (/^[dn]\d{10}/.test(START)) {
   const k = START[0], d = START.slice(1, 7), hm = START.slice(7, 11);
-  sub = d.slice(4, 6) + '.' + d.slice(2, 4) + '.20' + d.slice(0, 2) + ' · ' + (k === 'd' ? 'кундузги навбат (08:00–20:00)' : 'тунги навбат (20:00–08:00)') + ' · ' + hm.slice(0, 2) + ':' + hm.slice(2) + ' ҳолати';
+  sub = d.slice(4, 6) + '.' + d.slice(2, 4) + '.20' + d.slice(0, 2) + ' · ' + (k === 'd' ? 'кундузги навбат (08:00–20:00)' : 'тунги навбат (20:00–08:00)') + ' · 🕒 ' + hm.slice(0, 2) + ':' + hm.slice(2) + ' ҳолати';
   const body = START.slice(11);
   MACHINES.forEach((m, i) => {
     const c = body.slice(i * 5, i * 5 + 5);
@@ -97,13 +95,13 @@ let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Цех 
 });
 for (const m of MACHINES) {
   const st = state[m.n] || {};
-  const kind = st.status === 's' ? 'stop' : st.status === 'r' || st.status === 'c' ? m.type : 'empty';
+  const kind = st.status === 's' ? 'stop' : st.status === 'r' || st.status === 'c' ? 'run' : 'empty';
   const c = PAL[kind];
   const top = (m.sheet === 1 ? T1 : T2) + m.y;
   const cpl = (fs) => Math.max(4, Math.floor((m.w - 8) / (fs * 0.55)));
-  let lines = [{ t: '№' + m.n, fs: 22, b: 1 }];
+  let lines = [{ t: '№' + m.n, fs: 24, b: 1 }];
   const nameL = wrap(m.name, cpl(12)).map((t) => ({ t, fs: 12, mu: 1 }));
-  const prodL = st.status === 's' ? [{ t: 'ТЎХТАГАН', fs: 13, b: 1 }] : st.product ? wrap(st.product, cpl(13)).map((t) => ({ t, fs: 13, b: 1 })) : [{ t: 'бўш', fs: 13, mu: 1 }];
+  const prodL = st.status === 's' ? [{ t: 'ТЎХТАГАН', fs: 15, b: 1 }] : st.product ? wrap(st.product, cpl(15)).map((t) => ({ t, fs: 15, b: 1 })) : [{ t: 'бўш', fs: 15, mu: 1 }];
   const sum = (a) => a.reduce((x, l) => x + l.fs * 1.22, 0);
   let all = lines.concat(nameL, prodL);
   if (sum(all) > m.h - 6) all = lines.concat(prodL);
@@ -116,7 +114,7 @@ for (const m of MACHINES) {
 svg += '</svg>';
 document.getElementById('map').innerHTML = svg;
 
-const LEG = [['press', 'Пресс'], ['cup', 'Cup'], ['bottle', 'Бутилка'], ['other', 'Бошқа'], ['empty', 'Бўш'], ['stop', 'Тўхтаган']];
+const LEG = [['run', 'Ишлаяпти'], ['empty', 'Бўш'], ['stop', 'Тўхтаган']];
 document.getElementById('legend').innerHTML = LEG.map(([k, t]) => '<span><i style="background:' + PAL[k].f + ';border-color:' + PAL[k].s + '"></i>' + t + '</span>').join('');
 
 function say(msg) { try { tg && tg.showAlert ? tg.showAlert(msg) : alert(msg); } catch (e) { alert(msg); } }
